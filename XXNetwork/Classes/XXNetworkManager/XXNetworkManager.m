@@ -170,16 +170,17 @@
         case XXRequestMethodGet:{
             request.sessionDataTask = [self.sessionManager GET:requestURLString
                                                     parameters:requestParam
+                                                       headers:nil
                                                       progress:^(NSProgress * _Nonnull downloadProgress) {
-                                                          [weakSelf handleRequestProgress:downloadProgress request:blockRequest];
-                                                      }
+                                                                [weakSelf handleRequestProgress:downloadProgress request:blockRequest];
+                                                            }
                                                        success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
-                
-                                                           [weakSelf handleRequestSuccess:task responseObject:responseObject];
-                                                       }
+                                                                [weakSelf handleRequestSuccess:task responseObject:responseObject];
+                                                            }
                                                        failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
-                                                           [weakSelf handleRequestFailure:task error:error];
-                                                       }];
+                                                                [weakSelf handleRequestFailure:task error:error];
+                                                            }];
+            
         }
             break;
         case XXRequestMethodPost:{
@@ -187,28 +188,33 @@
             if (constructingBlock) {
                 request.sessionDataTask = [self.sessionManager POST:requestURLString
                                                          parameters:requestParam
+                                                            headers:nil
                                           constructingBodyWithBlock:constructingBlock
                                                            progress:^(NSProgress * _Nonnull uploadProgress) {
-                                                               [weakSelf handleRequestProgress:uploadProgress request:blockRequest];
-                                                           }
+                                                                    [weakSelf handleRequestProgress:uploadProgress request:blockRequest];
+                                                                }
                                                             success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
-                                                                [weakSelf handleRequestSuccess:task responseObject:responseObject];
-                                                            }
+                                                                    [weakSelf handleRequestSuccess:task responseObject:responseObject];
+                                                                }
                                                             failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
-                                                                [weakSelf handleRequestFailure:task error:error];
-                                                            }];
+                                                                    [weakSelf handleRequestFailure:task error:error];
+                                                                }];
+                
             }else{
+                
                 request.sessionDataTask = [self.sessionManager POST:requestURLString
                                                          parameters:requestParam
+                                                            headers:nil
                                                            progress:^(NSProgress * _Nonnull uploadProgress) {
-                                                               [weakSelf handleRequestProgress:uploadProgress request:blockRequest];
-                                                           }
+                                                                    [weakSelf handleRequestProgress:uploadProgress request:blockRequest];
+                                                                }
                                                             success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
-                                                                [weakSelf handleRequestSuccess:task responseObject:responseObject];
-                                                            }
+                                                                    [weakSelf handleRequestSuccess:task responseObject:responseObject];
+                                                                }
                                                             failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
-                                                                [weakSelf handleRequestFailure:task error:error];
-                                                            }];
+                                                                    [weakSelf handleRequestFailure:task error:error];
+                                                                }];
+                
             }
         }
             break;
