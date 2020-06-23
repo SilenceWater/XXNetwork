@@ -7,12 +7,22 @@
 //
 
 #import "XXAppDelegate.h"
+#import <XXNetwork/XXNetwork.h>
+#import "XXNetworkServiceObject.h"
+
+static NSString *const kServiceTypeDEV = @"com.dy.dev.service.identifier";
 
 @implementation XXAppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     // Override point for customization after application launch.
+    
+    
+    XXNetworkServiceObject *object = [XXNetworkServiceObject new];
+    object.serviceType = DYNetworkServiceTypeDEV;
+    [[XXNetworkConfig sharedInstance] registerServiceObject:object serviceIdentifier:kServiceTypeDEV];
+    
     return YES;
 }
 

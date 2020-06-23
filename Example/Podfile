@@ -4,6 +4,8 @@ platform :ios, '8.0'
 
 target 'XXNetwork_Example' do
   pod 'XXNetwork', :path => '../'
+  
+  pod 'MBProgressHUD'
 
   target 'XXNetwork_Tests' do
     inherit! :search_paths
