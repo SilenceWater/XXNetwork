@@ -9,16 +9,18 @@ Pod::Spec.new do |s|
 TODO: Add long description of the pod here.
                        DESC
 
-  s.homepage         = 'https://github.com/Monster ./XXNetwork'
+  s.homepage         = 'https://github.com/SilenceWater/XXNetwork'
   # s.screenshots     = 'www.example.com/screenshots_1', 'www.example.com/screenshots_2'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'Monster .' => 'wwwarehouse@163.com' }
-  s.source           = { :git => 'https://github.com/Monster ./XXNetwork.git', :tag => s.version.to_s }
+  s.source           = { :git => 'https://github.com/SilenceWater/XXNetwork.git', :tag => s.version.to_s }
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
-  s.ios.deployment_target = '8.0'
+  s.ios.deployment_target = '10.0'
 
-  s.source_files = 'XXNetwork/Classes/**/*'
+  
+  s.source_files = 'XXNetwork/Classes/**/*.{h,m}'
+  s.public_header_files = 'XXNetwork.h'
   
   # s.resource_bundles = {
   #   'XXNetwork' => ['XXNetwork/Assets/*.png']
