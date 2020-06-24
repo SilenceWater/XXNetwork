@@ -63,8 +63,8 @@
     XXTestNetwork *request = [XXTestNetwork new];
     XXHudAccessory *hud = [[XXHudAccessory alloc]initWithView:self.view msg:@"加载中"];
     [request addNetworkAccessoryObject:hud];
-    request.Password = @"123456";
-    request.CellPhoneNumber = @"15038895697";
+//    request.Password = @"123456";
+//    request.CellPhoneNumber = @"15038895697";
     request.responseDelegate = self;
     [request startRequest];
 }

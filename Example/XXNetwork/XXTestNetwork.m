@@ -16,7 +16,7 @@
 }
 
 - (NSString *)requestMethodName {
-    return @"/Service/CustomerLogin";
+    return @"config/start/ad";
     return @"http://r.qzone.qq.com/";
 }
 
@@ -39,7 +39,7 @@
  请求方式，默认为 XXRequestMethodPost
  */
 - (XXRequestMethod)requestMethod {
-    return XXRequestMethodPost;
+    return XXRequestMethodGet;
 }
 
 /**
@@ -47,13 +47,13 @@
  
  @return 参数字典
  */
-- (NSDictionary *)requestParamDictionary {
-//    return nil;
-    return @{
-             @"CellPhoneNumber" : self.CellPhoneNumber ?: @"",
-             @"Password" : self.Password ?: @""
-             };
-}
+//- (NSDictionary *)requestParamDictionary {
+////    return nil;
+//    return @{
+//             @"CellPhoneNumber" : self.CellPhoneNumber ?: @"",
+//             @"Password" : self.Password ?: @""
+//             };
+//}
 
 /**
  定制缓存策略，默认NSURLRequestUseProtocolCachePolicy

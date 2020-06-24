@@ -16,6 +16,7 @@
  @return 接口基础地址
  */
 - (NSString *)serviceApiBaseUrlString {
+    return @"http://101.91.233.105:90/kong/app/";
     return @[
              @"http://111.6.79.11:11021/api/",
              @"https://www.baidu.com/cit/",
