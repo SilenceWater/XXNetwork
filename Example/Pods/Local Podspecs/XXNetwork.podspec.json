@@ -1,6 +1,6 @@
 {
   "name": "XXNetwork",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "summary": "A short description of XXNetwork.",
   "description": "TODO: Add long description of the pod here.",
   "homepage": "https://github.com/SilenceWater/XXNetwork",
@@ -13,10 +13,11 @@
   },
   "source": {
     "git": "https://github.com/SilenceWater/XXNetwork.git",
-    "tag": "0.1.0"
+    "tag": "0.1.2"
   },
   "platforms": {
-    "ios": "10.0"
+    "ios": "10.0",
+    "osx": "10.11"
   },
   "source_files": "XXNetwork/Classes/**/*.{h,m}",
   "public_header_files": "XXNetwork.h",

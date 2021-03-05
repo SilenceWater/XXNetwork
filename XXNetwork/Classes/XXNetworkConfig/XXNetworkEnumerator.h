@@ -112,12 +112,27 @@ typedef NS_ENUM(NSInteger , XXServiceAuthenticationStatus) {
  - XXNetworkPriorityTypeDefaultLow:    低
  - XXNetworkPriorityTypeVeryLow:       非常低
  */
+
+#if !TARGET_OS_IPHONE && TARGET_OS_MAC
+
 typedef int  XXNetworkPriorityType NS_TYPED_EXTENSIBLE_ENUM;
-static const XXNetworkPriorityType XXNetworkPriorityTypeVeryHigh      NS_AVAILABLE_IOS(10_0) = 1000;
-static const XXNetworkPriorityType XXNetworkPriorityTypeDefaultHigh   NS_AVAILABLE_IOS(10_0) = 750;
-static const XXNetworkPriorityType XXNetworkPriorityTypeDefaultNormal NS_AVAILABLE_IOS(10_0) = 500;
-static const XXNetworkPriorityType XXNetworkPriorityTypeDefaultLow    NS_AVAILABLE_IOS(10_0) = 250;
-static const XXNetworkPriorityType XXNetworkPriorityTypeVeryLow       NS_AVAILABLE_IOS(10_0) = 50;
+static const XXNetworkPriorityType XXNetworkPriorityTypeVeryHigh      NS_AVAILABLE_MAC(10_0) = 1000;
+static const XXNetworkPriorityType XXNetworkPriorityTypeDefaultHigh   NS_AVAILABLE_MAC(10_0) = 750;
+static const XXNetworkPriorityType XXNetworkPriorityTypeDefaultNormal NS_AVAILABLE_MAC(10_0) = 500;
+static const XXNetworkPriorityType XXNetworkPriorityTypeDefaultLow    NS_AVAILABLE_MAC(10_0) = 250;
+static const XXNetworkPriorityType XXNetworkPriorityTypeVeryLow       NS_AVAILABLE_MAC(10_0) = 50;
+
+#else
+
+typedef int  XXNetworkPriorityType NS_TYPED_EXTENSIBLE_ENUM;
+static const XXNetworkPriorityType XXNetworkPriorityTypeVeryHigh      CF_AVAILABLE_IOS(10_0) = 1000;
+static const XXNetworkPriorityType XXNetworkPriorityTypeDefaultHigh   CF_AVAILABLE_IOS(10_0) = 750;
+static const XXNetworkPriorityType XXNetworkPriorityTypeDefaultNormal CF_AVAILABLE_IOS(10_0) = 500;
+static const XXNetworkPriorityType XXNetworkPriorityTypeDefaultLow    CF_AVAILABLE_IOS(10_0) = 250;
+static const XXNetworkPriorityType XXNetworkPriorityTypeVeryLow       CF_AVAILABLE_IOS(10_0) = 50;
+
+#endif
+
 
 
 #endif /* XXNetworkEnumerator_h */
