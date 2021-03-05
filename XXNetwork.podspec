@@ -1,7 +1,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'XXNetwork'
-  s.version          = '0.1.1'
+  s.version          = '0.1.2'
   s.summary          = 'A short description of XXNetwork.'
 
 
@@ -17,6 +17,7 @@ TODO: Add long description of the pod here.
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
   s.ios.deployment_target = '10.0'
+  s.osx.deployment_target = '10.11'
 
   
   s.source_files = 'XXNetwork/Classes/**/*.{h,m}'
