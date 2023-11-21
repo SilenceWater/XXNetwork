@@ -22,6 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 + (void)logDebugRequestInfoWithURL:(NSString *)url
                         httpMethod:(NSInteger)httpMethod
+                            header:(NSDictionary *)header
                             params:(NSDictionary *)params
                 reachabilityStatus:(NSInteger)reachabilityStatus
                    networkPriority:(int)priority;

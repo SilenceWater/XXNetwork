@@ -11,21 +11,21 @@
 
 + (void)logDebugRequestInfoWithURL:(NSString *)url
                         httpMethod:(NSInteger)httpMethod
+                            header:(NSDictionary *)header
                             params:(NSDictionary *)params
                 reachabilityStatus:(NSInteger)reachabilityStatus
                     networkPriority:(int)priority {
     NSMutableString *logString = [NSMutableString stringWithString:@"\n\n**********************************************************************************\n*                                  🚀Request🚀                                   *\n**********************************************************************************\n"];
     [logString appendFormat:@"URL:\t\t\t\t%@\n",url];
     [logString appendFormat:@"Priority:\t\t\t%@\n",@(priority)];
-    [logString appendFormat:@"Method:\t\t\t\t%@\n",httpMethod == 0 ? @"Post" : @"Get"];
-    [logString appendFormat:@"Param:\t\t\t%@\n",params.count ? params : @""];
+    [logString appendFormat:@"Method:\t\t\t\t%@\n",httpMethod == 0 ? @"Post" : (httpMethod == 1 ? @"Get" : (httpMethod == 2 ? @"Put" : @"Delete"))];
     NSString *netReachability = nil;
     switch (reachabilityStatus) {
         case 2:
             netReachability = @"WIFI";
             break;
         case 1:
-            netReachability = @"2G/3G/4G";
+            netReachability = @"2G/3G/4G/5G";
             break;
         case 0:
             netReachability = @"Not Reachable";
@@ -34,7 +34,9 @@
             netReachability = @"Unknown";
             break;
     }
-    [logString appendFormat:@"Net:\t\t\t\t\t%@",netReachability];
+    [logString appendFormat:@"Net:\t\t\t\t%@\n",netReachability];
+    [logString appendFormat:@"Header:\t\t\t%@\n",header.count ? header : @""];
+    [logString appendFormat:@"Param:\t\t\t%@\n",params.count ? params : @""];
     [logString appendFormat:@"\n**********************************************************************************\n*                                🚀Request End🚀                                 *\n**********************************************************************************\n\n\n\n"];
     NSLog(@"%@", logString);
 }

@@ -35,10 +35,14 @@ typedef NS_ENUM(NSUInteger, XXNetworkStatus) {
 
  - XXRequestMethodPost: Post请求
  - XXRequestMethodGet: Get请求
+ - XXRequestMethodPut: Put请求
+ - XXRequestMethodDelete: Delete请求
  */
 typedef NS_ENUM(NSUInteger, XXRequestMethod) {
     XXRequestMethodPost,
     XXRequestMethodGet,
+    XXRequestMethodPut,
+    XXRequestMethodDelete,
 };
 
 

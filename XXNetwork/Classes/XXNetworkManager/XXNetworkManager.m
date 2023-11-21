@@ -15,7 +15,7 @@
 #import "XXNetworkLogger.h"
 #import "XXNetworkBatchRequest.h"
 
-@interface XXNetworkManager ()
+@interface XXNetworkManager () <XXNetworkHandleResponseProtocol>
 
 @property (nonatomic, strong) AFHTTPSessionManager *sessionManager;
 
@@ -156,10 +156,10 @@
     
     if ([request respondsToSelector:@selector(enableDebugLog)]) {
         if ([request enableDebugLog]) {
-            [XXNetworkLogger logDebugRequestInfoWithURL:requestURLString httpMethod:[self requestMethodByRequest:request] params:requestParam reachabilityStatus:[[AFNetworkReachabilityManager sharedManager] networkReachabilityStatus] networkPriority:request.priorityType];
+            [XXNetworkLogger logDebugRequestInfoWithURL:requestURLString httpMethod:[self requestMethodByRequest:request] header:[self headersWithRequest:request] params:requestParam reachabilityStatus:[[AFNetworkReachabilityManager sharedManager] networkReachabilityStatus] networkPriority:request.priorityType];
         }
     }else if ([XXNetworkConfig sharedInstance].enableDebug) {
-        [XXNetworkLogger logDebugRequestInfoWithURL:requestURLString httpMethod:[self requestMethodByRequest:request] params:requestParam reachabilityStatus:[[AFNetworkReachabilityManager sharedManager] networkReachabilityStatus] networkPriority:request.priorityType];
+        [XXNetworkLogger logDebugRequestInfoWithURL:requestURLString httpMethod:[self requestMethodByRequest:request] header:[self headersWithRequest:request] params:requestParam reachabilityStatus:[[AFNetworkReachabilityManager sharedManager] networkReachabilityStatus] networkPriority:request.priorityType];
     }
     
     [self setupSessionManagerRequestSerializerByRequest:request];
@@ -202,20 +202,69 @@
                 
             }else{
                 
-                request.sessionDataTask = [self.sessionManager POST:requestURLString
-                                                         parameters:requestParam
-                                                            headers:nil
-                                                           progress:^(NSProgress * _Nonnull uploadProgress) {
-                                                                    [weakSelf handleRequestProgress:uploadProgress request:blockRequest];
-                                                                }
-                                                            success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
-                                                                    [weakSelf handleRequestSuccess:task responseObject:responseObject];
-                                                                }
-                                                            failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
-                                                                    [weakSelf handleRequestFailure:task error:error];
-                                                                }];
-                
+                if ([request respondsToSelector:@selector(encryptWithRequestParams:)] && [request encryptWithRequestParams:requestParam] != nil) {
+                    // 参数加密
+                    requestParam = [request encryptWithRequestParams:requestParam];
+                    request.handleDelegate = weakSelf;
+                    NSMutableURLRequest *rq = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:requestURLString]];
+
+                    rq.HTTPMethod = @"POST";
+                    rq.HTTPBody = (NSData *)requestParam;
+                    [rq setTimeoutInterval:[weakSelf timeoutIntervalWithRequest:request]];
+                    
+                    if ([request respondsToSelector:@selector(customHTTPRequestHeaders)]) {
+                        NSDictionary *dic = [request customHTTPRequestHeaders];
+                        [dic enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+                            [rq setValue:obj forHTTPHeaderField:key];
+                        }];
+                    }
+                    NSURLSession *session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:request delegateQueue:nil];
+                    
+                    request.sessionDataTask = [session dataTaskWithRequest:rq];
+                    [request.sessionDataTask resume];
+                }else {
+                    // 参数未加密
+                    request.sessionDataTask = [self.sessionManager POST:requestURLString
+                                                             parameters:requestParam
+                                                                headers:nil
+                                                               progress:^(NSProgress * _Nonnull uploadProgress) {
+                                                                        [weakSelf handleRequestProgress:uploadProgress request:blockRequest];
+                                                                    }
+                                                                success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+                                                                        [weakSelf handleRequestSuccess:task responseObject:responseObject];
+                                                                    }
+                                                                failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+                                                                        [weakSelf handleRequestFailure:task error:error];
+                                                                    }];
+                }
             }
+        }
+            break;
+        case XXRequestMethodPut:
+        {
+            request.sessionDataTask = [self.sessionManager PUT:requestURLString
+                                                    parameters:requestParam
+                                                       headers:nil
+                                                       success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+                                            [weakSelf handleRequestSuccess:task responseObject:responseObject];
+                                        }
+                                                                                   failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+                                            [weakSelf handleRequestFailure:task error:error];
+                                        }];
+        }
+            break;
+        case XXRequestMethodDelete:
+        {
+            request.sessionDataTask = [self.sessionManager
+                                       DELETE:requestURLString
+                                       parameters:requestParam
+                                       headers:nil
+                                       success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+                                            [weakSelf handleRequestSuccess:task responseObject:responseObject];
+                                        }
+                                                                   failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+                                            [weakSelf handleRequestFailure:task error:error];
+                                        }];
         }
             break;
         default:
@@ -338,6 +387,29 @@
     return NSURLRequestReloadIgnoringCacheData;
 }
 
+- (NSTimeInterval)timeoutIntervalWithRequest:(__kindof XXNetworkRequest<XXNetworkRequestConfigProtocol> *)request {
+    NSObject<XXNetworkServiceProtocol> *serviceObject = [self serviceObjectByRequest:request];
+    NSTimeInterval timeoutInterval = 15.0f;
+    if ([request.requestConfigProtocol respondsToSelector:@selector(requestTimeoutInterval)]) {
+        timeoutInterval = [request.requestConfigProtocol requestTimeoutInterval];
+    }else if ([serviceObject respondsToSelector:@selector(serviceRequestTimeoutInterval)]) {
+        timeoutInterval = [serviceObject serviceRequestTimeoutInterval];
+    }
+    return timeoutInterval;
+}
+
+- (NSDictionary *)headersWithRequest:(__kindof XXNetworkRequest<XXNetworkRequestConfigProtocol> *)request {
+    NSMutableDictionary *headersDic = [NSMutableDictionary dictionaryWithCapacity:0];
+    NSObject<XXNetworkServiceProtocol> *serviceObject = [self serviceObjectByRequest:request];
+    if ([serviceObject respondsToSelector:@selector(serviceBaseHTTPRequestHeaders)]) {
+        [headersDic addEntriesFromDictionary: [serviceObject serviceBaseHTTPRequestHeaders]];
+    }
+    if ([request.requestConfigProtocol respondsToSelector:@selector(customHTTPRequestHeaders)]) {
+        [headersDic addEntriesFromDictionary: [request.requestConfigProtocol customHTTPRequestHeaders]];
+    }
+    return headersDic;
+}
+
 #pragma mark -
 #pragma mark - Setter
 
@@ -441,13 +513,7 @@
     }
     
     //配置请求超时时间
-    NSTimeInterval timeoutInterval = 15.0f;
-    if ([request.requestConfigProtocol respondsToSelector:@selector(requestTimeoutInterval)]) {
-        timeoutInterval = [request.requestConfigProtocol requestTimeoutInterval];
-    }else if ([serviceObject respondsToSelector:@selector(serviceRequestTimeoutInterval)]) {
-        timeoutInterval = [serviceObject serviceRequestTimeoutInterval];
-    }
-    self.sessionManager.requestSerializer.timeoutInterval = timeoutInterval;
+    self.sessionManager.requestSerializer.timeoutInterval = [self timeoutIntervalWithRequest:request];
     
     //配置responseSerializerType
     XXResponseSerializerType responseSerializerType = XXResponseSerializerTypeJSON;
@@ -550,12 +616,15 @@
     if(authenticationStatus ==  XXServiceAuthenticationStatusPass && [request.requestConfigProtocol isCorrectWithResponseData:response]) {
         XXNetworkResponse *successResponse = [[XXNetworkResponse alloc] initWithResponseData:response serviceIdentifierKey:[request serviceIdentifierKey] requestTag:request.tag networkStatus:XXNetworkResponseDataSuccessStatus];
         [request stopRequestByResponse:successResponse];
-
-        if ([request.responseDelegate respondsToSelector:@selector(networkRequest:succeedByResponse:)]) {
-            [request.responseDelegate networkRequest:request succeedByResponse:successResponse];
-        }else if (request.responseSuccessBlock) {
-            request.responseSuccessBlock(successResponse);
-        }
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if ([request.responseDelegate respondsToSelector:@selector(networkRequest:succeedByResponse:)]) {
+                [request.responseDelegate networkRequest:request succeedByResponse:successResponse];
+            }else if (request.responseSuccessBlock) {
+                request.responseSuccessBlock(successResponse);
+            }
+        });
+        
 
     } else {
         XXNetworkStatus failStatus;
@@ -575,11 +644,13 @@
         if (authenticationStatus != XXServiceAuthenticationStatusWrong) {
             
             [self beforePerformFailWithResponse:dataErrorResponse request:request];
-            if ([request.responseDelegate respondsToSelector:@selector(networkRequest:failedByResponse:)]) {
-                [request.responseDelegate networkRequest:request failedByResponse:dataErrorResponse];
-            }else if (request.responseFailBlock) {
-                request.responseFailBlock(dataErrorResponse, nil);
-            }
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if ([request.responseDelegate respondsToSelector:@selector(networkRequest:failedByResponse:)]) {
+                    [request.responseDelegate networkRequest:request failedByResponse:dataErrorResponse];
+                }else if (request.responseFailBlock) {
+                    request.responseFailBlock(dataErrorResponse, nil);
+                }
+            });
             [self afterPerformFailWithResponse:dataErrorResponse request:request];
         }
     }

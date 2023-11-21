@@ -92,6 +92,11 @@ typedef void (^XXNetworkResponseSuccessBlock)(XXNetworkResponse *response);
 - (BOOL)isCorrectWithRequestParams:(NSDictionary *)params;
 
 
+/// 参数加密
+/// @param params 加密前的参数
+- (id)encryptWithRequestParams:(NSDictionary *)params;
+
+
 
 /// 请求的SerializerType 默认XXRequestSerializerTypeJSON, 可通过XXNetworkConfig设置默认值
 - (XXRequestSerializerType)requestSerializerType;
