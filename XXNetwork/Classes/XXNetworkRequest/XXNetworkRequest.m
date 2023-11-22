@@ -207,6 +207,9 @@
         __strong __typeof(&*weakSelf) strongSelf =weakSelf;
         @try {
             NSData *data = [strongSelf.responseData copy];
+            if ([weakSelf.requestConfigProtocol respondsToSelector:@selector(decryptWithRequestResponse:)] && [weakSelf.requestConfigProtocol decryptWithRequestResponse:data] != nil) {
+                data = [weakSelf.requestConfigProtocol decryptWithRequestResponse:data];
+            }
             NSError *error;
             id responseObject = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
             

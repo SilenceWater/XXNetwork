@@ -92,9 +92,16 @@ typedef void (^XXNetworkResponseSuccessBlock)(XXNetworkResponse *response);
 - (BOOL)isCorrectWithRequestParams:(NSDictionary *)params;
 
 
+
 /// 参数加密
 /// @param params 加密前的参数
 - (id)encryptWithRequestParams:(NSDictionary *)params;
+
+
+
+/// 参数解密
+/// @param response 需要解密的数据
+- (id)decryptWithRequestResponse:(id)response;
 
 
 
