@@ -205,7 +205,8 @@
                 if ([request respondsToSelector:@selector(encryptWithRequestParams:)] && [request encryptWithRequestParams:requestParam] != nil) {
                     // 参数加密
                     requestParam = [request encryptWithRequestParams:requestParam];
-                    request.handleDelegate = weakSelf;
+                    XXNetworkRequestDeleagater *delegater = request.delegater;
+                    delegater.handleDelegate = weakSelf;
                     NSMutableURLRequest *rq = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:requestURLString]];
 
                     rq.HTTPMethod = @"POST";
@@ -218,7 +219,8 @@
                             [rq setValue:obj forHTTPHeaderField:key];
                         }];
                     }
-                    NSURLSession *session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:request delegateQueue:nil];
+                    
+                    NSURLSession *session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:delegater delegateQueue:nil];
                     
                     request.sessionDataTask = [session dataTaskWithRequest:rq];
                     [request.sessionDataTask resume];

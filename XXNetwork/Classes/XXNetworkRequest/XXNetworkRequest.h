@@ -14,6 +14,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class XXNetworkRequestDeleagater;
+
 /// 单体请求
 @interface XXNetworkRequest : NSObject
 
@@ -29,14 +31,13 @@ NS_ASSUME_NONNULL_BEGIN
 /*! 请求配置协议 */
 @property (nonatomic, weak, readonly) NSObject <XXNetworkRequestConfigProtocol>*requestConfigProtocol;
 
+@property (nonatomic, strong) XXNetworkRequestDeleagater *delegater;
+
 /*! 响应协议 */
 @property (nonatomic, weak) id <XXNetworkResponseProtocol>responseDelegate;
 
 /*! 插件协议 */
 @property (nonatomic, weak) id <XXNetworkAccessoryProtocol>accessoryDelegate;
-
-/*! 处理返回协议（只在body加密时用到） */
-@property (nonatomic, weak) id <XXNetworkHandleResponseProtocol>handleDelegate;
 
 /*! 重复次数 */
 @property (nonatomic, assign) NSUInteger retryCount;
@@ -87,6 +88,17 @@ NS_ASSUME_NONNULL_BEGIN
  @param accessoryDelegate accessoryDelegate 插件对象
  */
 - (void)addNetworkAccessoryObject:(id<XXNetworkAccessoryProtocol>)accessoryDelegate;
+
+@end
+
+
+
+@interface XXNetworkRequestDeleagater : NSObject <NSURLSessionDelegate>
+
+@property (nonatomic, weak) XXNetworkRequest *request;
+
+/*! 处理返回协议（只在body加密时用到） */
+@property (nonatomic, weak) id <XXNetworkHandleResponseProtocol>handleDelegate;
 
 @end
 

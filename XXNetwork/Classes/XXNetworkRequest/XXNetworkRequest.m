@@ -122,6 +122,74 @@
     }
 }
 
+
+#pragma mark - gzip解压
+- (NSData *)gzipUnpack:(NSData *)pCompressedData{
+    
+    if ([pCompressedData length] == 0) return pCompressedData;
+    
+    unsigned full_length = (unsigned int)[pCompressedData length];
+    unsigned half_length = (unsigned int)[pCompressedData length] / 2;
+    
+    NSMutableData *decompressed = [NSMutableData dataWithLength: full_length +     half_length];
+    BOOL done = NO;
+    int status;
+    
+    z_stream strm;
+    strm.next_in = (Bytef *)[pCompressedData bytes];
+    strm.avail_in = (unsigned int)[pCompressedData length];
+    strm.total_out = 0;
+    strm.zalloc = Z_NULL;
+    strm.zfree = Z_NULL;
+    
+    if (inflateInit2(&strm, (15+32)) != Z_OK) return nil;
+    
+    while (!done){
+        if (strm.total_out >= [decompressed length])
+            [decompressed increaseLengthBy: half_length];
+        strm.next_out = [decompressed mutableBytes] + strm.total_out;
+        strm.avail_out = (unsigned int)([decompressed length] - strm.total_out);
+        
+        // Inflate another chunk.
+        status = inflate (&strm, Z_SYNC_FLUSH);
+        if (status == Z_STREAM_END) done = YES;
+        else if (status != Z_OK) break;
+    }
+    
+    if (inflateEnd (&strm) != Z_OK) return nil;
+    
+    // Set real length.
+    if (done){
+        [decompressed setLength: strm.total_out];
+        return [NSData dataWithData: decompressed];
+    }
+    return nil;
+}
+
+- (XXNetworkRequestDeleagater *)delegater {
+    if (!_delegater) {
+        _delegater = [XXNetworkRequestDeleagater new];
+        _delegater.request = self;
+    }
+    return _delegater;
+}
+
+
+@end
+
+
+
+
+
+
+@interface XXNetworkRequestDeleagater ()
+
+@property (nonatomic, strong) NSMutableData *responseData;
+
+@end
+
+@implementation XXNetworkRequestDeleagater
+
 #pragma  mark -
 #pragma  mark NSURLSessionDelegate
 
@@ -160,6 +228,7 @@
 // 3.请求成功或者失败（如果失败，error有值）
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(NSError *)error {
     [self sessionDidCompleteWithError:error task:task];
+    [session finishTasksAndInvalidate];
 }
 
 
@@ -206,9 +275,13 @@
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         __strong __typeof(&*weakSelf) strongSelf =weakSelf;
         @try {
-            NSData *data = [strongSelf.responseData copy];
-            if ([weakSelf.requestConfigProtocol respondsToSelector:@selector(decryptWithRequestResponse:)] && [weakSelf.requestConfigProtocol decryptWithRequestResponse:data] != nil) {
-                data = [weakSelf.requestConfigProtocol decryptWithRequestResponse:data];
+            NSData *data;
+            if (strongSelf.responseData) {
+                data = [strongSelf.responseData copy];
+                strongSelf.responseData = nil;
+            }
+            if ([weakSelf.request.requestConfigProtocol respondsToSelector:@selector(decryptWithRequestResponse:)] && [weakSelf.request.requestConfigProtocol decryptWithRequestResponse:data] != nil) {
+                data = [weakSelf.request.requestConfigProtocol decryptWithRequestResponse:data];
             }
             NSError *error;
             id responseObject = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
@@ -234,83 +307,8 @@
     
 }
 
-- (NSData *) Encryption:(NSData *) data{
-    Byte *_byte = (Byte*)[data bytes];
-    for (int i = 0; i < [data length]; i++) {
-        _byte[i] = _byte[i]^0x05;
-    }
-    NSData *postData = [NSData dataWithBytes:_byte length:[data length]];
-    return postData;
-}
-
-#pragma mark - gzip解压
-- (NSData *)gzipUnpack:(NSData *)pCompressedData{
-    
-    if ([pCompressedData length] == 0) return pCompressedData;
-    
-    unsigned full_length = (unsigned int)[pCompressedData length];
-    unsigned half_length = (unsigned int)[pCompressedData length] / 2;
-    
-    NSMutableData *decompressed = [NSMutableData dataWithLength: full_length +     half_length];
-    BOOL done = NO;
-    int status;
-    
-    z_stream strm;
-    strm.next_in = (Bytef *)[pCompressedData bytes];
-    strm.avail_in = (unsigned int)[pCompressedData length];
-    strm.total_out = 0;
-    strm.zalloc = Z_NULL;
-    strm.zfree = Z_NULL;
-    
-    if (inflateInit2(&strm, (15+32)) != Z_OK) return nil;
-    
-    while (!done){
-        if (strm.total_out >= [decompressed length])
-            [decompressed increaseLengthBy: half_length];
-        strm.next_out = [decompressed mutableBytes] + strm.total_out;
-        strm.avail_out = (unsigned int)([decompressed length] - strm.total_out);
-        
-        // Inflate another chunk.
-        status = inflate (&strm, Z_SYNC_FLUSH);
-        if (status == Z_STREAM_END) done = YES;
-        else if (status != Z_OK) break;
-    }
-    
-    if (inflateEnd (&strm) != Z_OK) return nil;
-    
-    // Set real length.
-    if (done){
-        [decompressed setLength: strm.total_out];
-        return [NSData dataWithData: decompressed];
-    }
-    return nil;
-}
-
-
-#pragma mark - jsonToDictionary
-- (NSDictionary *)jsonDataToDictionary:(NSData *)data adUnitId:(NSString *)adUnitId{
-    NSDictionary *jsonDic=nil;
-    if (!data) {
-        return nil;
-    }
-    @try {
-        NSError *error;
-        jsonDic = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&error];
-        if (error) {
-//            @throw [[NSException alloc] initWithName:@"Translate exception" reason:@"" userInfo:nil];
-            return nil;
-        }
-        return jsonDic;
-    }
-    @catch (NSException *exception) {
-        if (adUnitId) {
-//            [CatchLog sendCatchLog:adUnitId catchType:1 errorLog:exception.description];
-        }else{
-//            [CatchLog sendCatchLog:@"" catchType:1 errorLog:exception.description];
-        }
-        return nil;
-//        @throw [[NSException alloc] initWithName:@"Translate exception" reason:@"" userInfo:nil];
-    }
+- (void)dealloc {
+    NSLog(@"1");
 }
 
 @end
