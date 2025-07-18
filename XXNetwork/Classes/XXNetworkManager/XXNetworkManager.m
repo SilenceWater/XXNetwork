@@ -204,23 +204,22 @@
                 
                 if ([request respondsToSelector:@selector(encryptWithRequestParams:)] && [request encryptWithRequestParams:requestParam] != nil) {
                     // 参数加密
-                    requestParam = [request encryptWithRequestParams:requestParam];
-                    request.handleDelegate = weakSelf;
+                    NSData *data = [request encryptWithRequestParams:requestParam];
                     NSMutableURLRequest *rq = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:requestURLString]];
-
                     rq.HTTPMethod = @"POST";
-                    rq.HTTPBody = (NSData *)requestParam;
+                    rq.HTTPBody = data;
                     [rq setTimeoutInterval:[weakSelf timeoutIntervalWithRequest:request]];
-                    
                     if ([request respondsToSelector:@selector(customHTTPRequestHeaders)]) {
-                        NSDictionary *dic = [request customHTTPRequestHeaders];
-                        [dic enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
-                            [rq setValue:obj forHTTPHeaderField:key];
-                        }];
+                        NSDictionary *dic = [weakSelf headersWithRequest:request];
+                        rq.allHTTPHeaderFields = dic;
                     }
-                    NSURLSession *session = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:request delegateQueue:nil];
-                    
-                    request.sessionDataTask = [session dataTaskWithRequest:rq];
+                    request.sessionDataTask = [self.sessionManager dataTaskWithRequest:rq uploadProgress:nil downloadProgress:nil completionHandler:^(NSURLResponse * _Nonnull response, id  _Nullable responseObject, NSError * _Nullable error) {
+                        if (error) {
+                            [weakSelf handleRequestFailure:request.sessionDataTask error:error];
+                        }else {
+                            [weakSelf handleRequestSuccess:request.sessionDataTask responseObject:responseObject];
+                        }
+                    }];
                     [request.sessionDataTask resume];
                 }else {
                     // 参数未加密

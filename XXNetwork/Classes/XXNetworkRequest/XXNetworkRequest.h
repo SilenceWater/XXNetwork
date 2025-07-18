@@ -35,9 +35,6 @@ NS_ASSUME_NONNULL_BEGIN
 /*! 插件协议 */
 @property (nonatomic, weak) id <XXNetworkAccessoryProtocol>accessoryDelegate;
 
-/*! 处理返回协议（只在body加密时用到） */
-@property (nonatomic, weak) id <XXNetworkHandleResponseProtocol>handleDelegate;
-
 /*! 重复次数 */
 @property (nonatomic, assign) NSUInteger retryCount;
 
@@ -93,5 +90,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)accessoryByProgress:(NSProgress *)progress;
 
 @end
+
+
 
 NS_ASSUME_NONNULL_END
