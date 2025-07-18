@@ -31,6 +31,11 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)networkRequestAccessoryDidFinish;
 
+
+/// 请求进度
+/// @param progress 进度
+- (void)networkRequestAccessoryByProgress:(NSProgress *)progress;
+
 /**
  请求完成执行 end 与 networkRequestAccessoryDidEndByResponse: 会同时被调用（只适用于 单体请求）
 

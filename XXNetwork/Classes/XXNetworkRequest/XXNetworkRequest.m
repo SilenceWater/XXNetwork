@@ -96,6 +96,14 @@
     }
 }
 
+- (void)accessoryByProgress:(NSProgress *)progress {
+    for (id<XXNetworkAccessoryProtocol>accessory in self.accessoryArray) {
+        if ([accessory respondsToSelector:@selector(networkRequestAccessoryByProgress:)]) {
+            [accessory networkRequestAccessoryByProgress:progress];
+        }
+    }
+}
+
 - (void)accessoryDidStart {
     for (id<XXNetworkAccessoryProtocol>accessory in self.accessoryArray) {
         if ([accessory respondsToSelector:@selector(networkRequestAccessoryDidStart)]) {

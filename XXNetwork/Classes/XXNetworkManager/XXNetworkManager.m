@@ -319,13 +319,48 @@
     if ([serviceURLString hasPrefix:@"http"]) {
         if ([detailUrl hasPrefix:@":"]) {
             //适用于带自定义端口号
-            return [serviceURLString stringByAppendingFormat:@"%@", detailUrl];
+            NSString *url = [serviceURLString stringByAppendingFormat:@"%@", detailUrl];
+            url = [self handleUrl:url request:request];
+            return url;
         }
-        return [serviceURLString stringByAppendingPathComponent:detailUrl];
+        NSString *url = [serviceURLString stringByAppendingPathComponent:detailUrl];
+        url = [self handleUrl:url request:request];
+        return url;
     }else {
         NSLog(@"\n\n\n请设置正确的URL\n\n\n");
         return nil;
     }
+}
+
+- (NSString *)handleUrl:(NSString *)baseURL request:(__kindof XXNetworkRequest<XXNetworkRequestConfigProtocol> *)request {
+    __block NSString *completeURL = baseURL;
+    if (request.requestMethod == XXRequestMethodPost) {
+        NSMutableArray *queryItems = [NSMutableArray array];
+        NSDictionary *serviceBaseHTTPRequestHeaders = [[self serviceObjectByRequest:request] serviceBaseHTTPRequestHeaders];
+        [serviceBaseHTTPRequestHeaders enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, id  _Nonnull value, BOOL * _Nonnull stop) {
+            if ([value isKindOfClass:NSString.class]) {
+                NSString *encodedKey = [self encodeURIComponent:key];
+                NSString *encodedValue = [self encodeURIComponent:value];
+                NSString *queryItem = [NSString stringWithFormat:@"%@=%@", encodedKey, encodedValue];
+                [queryItems addObject:queryItem];
+            }
+            
+        }];
+        
+        NSString *queryString = [queryItems componentsJoinedByString:@"&"];
+            
+        completeURL = [NSString stringWithFormat:@"%@%@", baseURL, queryString.length > 0 ? [NSString stringWithFormat:@"?%@", queryString] : @""];
+    }
+    return completeURL;
+}
+
+- (NSString *)encodeURIComponent:(NSString *)string {
+    NSString *encodedString = (__bridge_transfer NSString *)CFURLCreateStringByAddingPercentEscapes(NULL,
+                                                (__bridge CFStringRef)string,
+                                                NULL,
+                                                (__bridge CFStringRef)@"!*'();:@&=+$,/?%#[]",
+                                                kCFStringEncodingUTF8);
+    return encodedString.length > 0 ? encodedString : @"";
 }
 
 - (NSDictionary *)requestParamByRequest:(__kindof XXNetworkRequest<XXNetworkRequestConfigProtocol> *)request {
@@ -413,7 +448,7 @@
 #pragma mark -
 #pragma mark - Setter
 
-- (void)setSessionManagerRequestSerializerByRequestSerializerType:(XXRequestSerializerType)requestSerializerType {
+-(void)setSessionManagerRequestSerializerByRequestSerializerType:(XXRequestSerializerType)requestSerializerType {
     switch (requestSerializerType) {
         case XXRequestSerializerTypeHTTP:
             self.sessionManager.requestSerializer = [AFHTTPRequestSerializer serializer];
@@ -582,6 +617,7 @@
     }else if (request.requestProgressBlock) {
         request.requestProgressBlock(request, progress);
     }
+    [request accessoryByProgress:progress];
 }
 
 - (void)handleRequestSuccess:(NSURLSessionDataTask *)sessionDataTask responseObject:(id)response {

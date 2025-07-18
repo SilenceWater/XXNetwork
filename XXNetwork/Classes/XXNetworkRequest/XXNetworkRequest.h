@@ -88,6 +88,10 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)addNetworkAccessoryObject:(id<XXNetworkAccessoryProtocol>)accessoryDelegate;
 
+
+
+- (void)accessoryByProgress:(NSProgress *)progress;
+
 @end
 
 NS_ASSUME_NONNULL_END
